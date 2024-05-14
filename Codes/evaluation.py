@@ -1,5 +1,5 @@
 from util import *
-
+import math
 # Add your import statements here
 
 
@@ -33,9 +33,9 @@ class Evaluation():
 		precision = -1
 
 		#Fill in code here
-
+		top_k_query = set(query_doc_IDs_ordered[:k])
+		precision = len(top_k_query.intersection(set(true_doc_IDs)))/k
 		return precision
-
 
 	def meanPrecision(self, doc_IDs_ordered, query_ids, qrels, k):
 		"""
@@ -63,9 +63,14 @@ class Evaluation():
 		"""
 
 		meanPrecision = -1
-
+		Precesion = 0
 		#Fill in code here
-
+		for i in range(len(query_ids)):
+			query_id = query_ids[i]
+			doc_ID_ordered = doc_IDs_ordered[i]
+			true_doc_Ids = qrels[i]
+			Precesion += self.queryPrecision(doc_ID_ordered, query_id, true_doc_Ids, k)
+		meanPrecision = Precesion/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanPrecision
 
 	
@@ -95,7 +100,8 @@ class Evaluation():
 		recall = -1
 
 		#Fill in code here
-
+		top_k_query = set(query_doc_IDs_ordered[:k])
+		recall = len(top_k_query.intersection(set(true_doc_IDs)))/len(true_doc_IDs)
 		return recall
 
 
@@ -127,6 +133,14 @@ class Evaluation():
 		meanRecall = -1
 
 		#Fill in code here
+		Recall = 0
+		#Fill in code here
+		for i in range(len(query_ids)):
+			query_id = query_ids[i]
+			doc_ID_ordered = doc_IDs_ordered[i]
+			true_doc_Ids = qrels[i]
+			Recall += self.queryPrecision(doc_ID_ordered, query_id, true_doc_Ids, k)
+		meanRecall = Recall/len(query_ids) if len(query_ids) > 0 else 0.0
 
 		return meanRecall
 
@@ -157,7 +171,9 @@ class Evaluation():
 		fscore = -1
 
 		#Fill in code here
-
+		Precesion = self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs,k)
+		Recall = self.queryRecall(query_doc_IDs_ordered, query_id, true_doc_IDs,k)
+		fscore = 1/((1/Precesion)+1/(Recall)) if Precesion != 0.0 and Recall != 0.0 else 0.0
 		return fscore
 
 
@@ -187,9 +203,14 @@ class Evaluation():
 		"""
 
 		meanFscore = -1
-
+		Fscore = 0
 		#Fill in code here
-
+		for i in range(len(query_ids)):
+			query_doc_id = doc_IDs_ordered[i]
+			true_doc_id = qrels[i]
+			query_id = query_ids[i]
+			Fscore += self.queryFscore(query_doc_id, query_id, true_doc_id, k)
+		meanFscore = Fscore/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanFscore
 	
 
@@ -219,6 +240,18 @@ class Evaluation():
 		nDCG = -1
 
 		#Fill in code here
+		DCG = 0.0
+		IDCG = 0.0
+		
+		for i in range(min(k, len(query_doc_IDs_ordered))):
+			doc_id = query_doc_IDs_ordered[i]
+			relevance = 1 if doc_id in true_doc_IDs else 0
+			DCG += (2**relevance - 1) / (math.log2(i + 2))
+		
+		for i in range(min(k, len(true_doc_IDs))):
+			IDCG += (2**1 - 1) / (math.log2(i + 2))
+		
+		nDCG = DCG / IDCG if IDCG > 0 else 0.0
 
 		return nDCG
 
@@ -249,9 +282,14 @@ class Evaluation():
 		"""
 
 		meanNDCG = -1
-
+		NDGC = 0.0
 		#Fill in code here
-
+		for i in range(len(query_ids)):
+			doc_id_ordered = doc_IDs_ordered[i]
+			query_id = query_ids[i]
+			true_doc_id = qrels[i]
+			NDGC += self.queryNDCG(doc_id_ordered, query_id, true_doc_id, k)
+		meanNDCG = NDGC/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanNDCG
 
 
@@ -282,6 +320,18 @@ class Evaluation():
 		avgPrecision = -1
 
 		#Fill in code here
+		num_relevant_docs_retrieved = 0
+		total_precision = 0.0
+
+		# Calculate precision at each retrieved document
+		for i in range(k):
+			if query_doc_IDs_ordered[i] in true_doc_IDs:
+				num_relevant_docs_retrieved += 1
+				precision_at_i = num_relevant_docs_retrieved / (i + 1)
+				total_precision += precision_at_i
+
+		# Calculate average precision
+		avgPrecision = total_precision / len(true_doc_IDs) if len(true_doc_IDs) > 0 else 0.0
 
 		return avgPrecision
 
@@ -312,8 +362,14 @@ class Evaluation():
 		"""
 
 		meanAveragePrecision = -1
-
+		AveragePrecesion = 0
 		#Fill in code here
-
+		for i in range(len(query_ids)):
+			doc_id_ordered = doc_IDs_ordered[i]
+			query_id = query_ids[i]
+			true_id = q_rels[i]
+			AveragePrecesion += self.queryAveragePrecision(doc_id_ordered, query_id, true_id, k)
+			
+		meanAveragePrecision = AveragePrecesion/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanAveragePrecision
 
