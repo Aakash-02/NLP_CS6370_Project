@@ -2,7 +2,7 @@ from util import *
 
 # Add your import statements here
 from nltk.stem import PorterStemmer
-
+from nltk.stem import WordNetLemmatizer
 
 
 class InflectionReduction:
@@ -34,5 +34,15 @@ class InflectionReduction:
 			for word in sent:
 				reducedText[-1].append(stemmer.stem(word))
 		return reducedText
+
+    def lemmatize(self, text):
+        reducedText = []
+        lemmatizer = WordNetLemmatizer()
+        for sent in text:
+            reducedText.append([])
+            for word in sent:
+                reducedText[-1].append(lemmatizer.lemmatize(word))
+        return reducedText
+        
 
 
