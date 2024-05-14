@@ -27,12 +27,12 @@ class InflectionReduction:
 		reducedText = None
 
 		#Fill in code here
-        reducedText = []
-    
-        for sent in text:
-            reducedText.append([])
-            for word in sent:
-                reducedText[-1].append(stemmer.stem(word))
+		reducedText = []
+
+		for sent in text:
+			reducedText.append([])
+			for word in sent:
+				reducedText[-1].append(stemmer.stem(word))
 		return reducedText
 
 

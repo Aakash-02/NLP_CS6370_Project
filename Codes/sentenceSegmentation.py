@@ -23,14 +23,14 @@ class SentenceSegmentation():
 
 		segmentedText = None
         #Fill in code here
-        delimiters = [".", '!', "?", "\n"] # list of delimiters
+		delimiters = [".", '!', "?", "\n"] # list of delimiters
         # iterating through all the delimiters
-        for delimiter in delimiters:
+		for delimiter in delimiters:
             # splitting and joining them using a space
-            segementedText = " ".join(text.split(delimiter))
+			segementedText = " ".join(text.split(delimiter))
         # splitting using the space
-        segmentedText = segmentedText.split()
-        return segmentedText
+		segmentedText = segmentedText.split()
+		return segmentedText
 
 	def punkt(self, text):
 		"""
@@ -50,7 +50,7 @@ class SentenceSegmentation():
 		segmentedText = None
 
 		#Fill in code here
-        nltk.download()
-        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-        segmentedText = tokenizer.tokenize(text)
-        return segmentedText
+		nltk.download()
+		tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+		segmentedText = tokenizer.tokenize(text)
+		return segmentedText

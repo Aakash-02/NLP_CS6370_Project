@@ -26,14 +26,14 @@ class StopwordRemoval():
 		stopwordRemovedText = None
 
 		#Fill in code here
-        nltk.download('stopwords')
-        stop_words = set(stopwords.words('english'))
+		nltk.download('stopwords')
+		stop_words = set(stopwords.words('english'))
 
-        stopwordRemovedText = []
+		stopwordRemovedText = []
 
-        for sent in text:
-            stopwordRemovedText.append([w for w in sent if w.lower() not in stop_words])
-            
+		for sent in text:
+			stopwordRemovedText.append([w for w in sent if w.lower() not in stop_words])
+			
 		return stopwordRemovedText
 
 

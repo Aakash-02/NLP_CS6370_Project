@@ -25,10 +25,9 @@ class Tokenization():
 		tokenizedText = None
 
 		#Fill in code here
-        tokenizedText = []
-    
-        for sent in text:
-            tokenizedText.append(sent.split())
+		tokenizedText = []
+		for sent in text:
+			tokenizedText.append(sent.split())
 
 		return tokenizedText
 
@@ -52,10 +51,10 @@ class Tokenization():
 		tokenizedText = None
 
 		#Fill in code here
-        tokenizer = TreebankWordTokenizer()
-    
-        tokenizedText = []
-        for sent in text:
-            tokenizedText.append(tokenizer.tokenize(sent))
+		tokenizer = TreebankWordTokenizer()
+
+		tokenizedText = []
+		for sent in text:
+			tokenizedText.append(tokenizer.tokenize(sent))
 
 		return tokenizedText
