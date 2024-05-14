@@ -66,9 +66,13 @@ class InformationRetrieval():
         # tf calculation for the docs
         tf = np.zeros((len(self.vocab), len(docs)))
         for i in range(len(doc_words)):
+            # print("docs: ", docs[i])
+            # print("doc_words: ",doc_words[i])
             for j in range(len(self.vocab)):
                 tf[j, i] += doc_words[i].count(self.vocab[j])
+            # print("vocab: ", self.vocab[j])
             tf[:, i] /= len(doc_words[i])
+        # print(sum(sum(tf)))
         # print(self.vocab)
         # idf calculation for the docs
         idf = np.ones((len(self.vocab), 1))
@@ -76,7 +80,7 @@ class InformationRetrieval():
             for j in range(len(doc_words)):
                 if self.vocab[i] in doc_words[j]:
                     idf[i] += 1
-        print("TF: ", tf)
+        # print("TF: ", tf)
         # tf-idf calculation
         tf_idf = tf * np.log((len(doc_words)+len(self.vocab)) / idf)
         # query vector:
@@ -92,13 +96,14 @@ class InformationRetrieval():
         
         # cosine similarity
         cos_sim = tf_idf.T @ query_vector / (np.linalg.norm(tf_idf) * np.linalg.norm(query_vector))
-
+        print(cos_sim)
         # ranking
-        rank = np.argsort(cos_sim)
-        print(rank)
-        print(type(rank))
-        print(type(rank[0]))
-        rank = [docIDs[i] for i in rank]
+        rank = np.argsort(cos_sim, axis=0)
+        # print(rank)
+        # print(type(rank))
+        # print(type(rank[0]))
+        # print("rank_sum: ", np.sum(rank))
+        rank = [docIDs[i[0]] for i in rank]
 
         return rank
     def rank(self, queries):
@@ -131,12 +136,13 @@ class InformationRetrieval():
             # retrieving relevant documents
             docs_rel = []
             for word in words:
-                assert word in self.vocab
-                print("word: ", word)
-                print("index: ",self.index[word])
-                docs_rel +=self.index[word]
+                # assert word in self.vocab
+                # print("word: ", word)
+                # print("index: ",self.index[word])
+                if word in self.index.keys():
+                    docs_rel +=self.index[word]
             docs_rel = list(set(docs_rel))
-            print(docs_rel)
+            # print(docs_rel)
             # ranking the documents
             rank = self.rank_docs_query(query, docs_rel)
             doc_IDs_ordered.append(rank)
