@@ -1,6 +1,7 @@
 from util import *
 
 # Add your import statements here
+import nltk
 from nltk.corpus import stopwords
 
 
@@ -26,7 +27,7 @@ class StopwordRemoval():
 		stopwordRemovedText = None
 
 		#Fill in code here
-		nltk.download('stopwords')
+		# nltk.download('stopwords')
 		stop_words = set(stopwords.words('english'))
 
 		stopwordRemovedText = []

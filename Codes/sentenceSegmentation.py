@@ -27,7 +27,7 @@ class SentenceSegmentation():
         # iterating through all the delimiters
 		for delimiter in delimiters:
             # splitting and joining them using a space
-			segementedText = " ".join(text.split(delimiter))
+			segmentedText = " ".join(text.split(delimiter))
         # splitting using the space
 		segmentedText = segmentedText.split()
 		return segmentedText
@@ -50,7 +50,7 @@ class SentenceSegmentation():
 		segmentedText = None
 
 		#Fill in code here
-		nltk.download()
+		# nltk.download("punkt")
 		tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 		segmentedText = tokenizer.tokenize(text)
 		return segmentedText

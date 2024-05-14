@@ -28,7 +28,7 @@ class InflectionReduction:
 
 		#Fill in code here
 		reducedText = []
-
+		stemmer = PorterStemmer()
 		for sent in text:
 			reducedText.append([])
 			for word in sent:
