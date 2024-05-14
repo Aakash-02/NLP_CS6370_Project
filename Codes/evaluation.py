@@ -33,8 +33,12 @@ class Evaluation():
 		precision = -1
 
 		#Fill in code here
+		# print("query_id: ", query_id)
+		# print("query: ",query_doc_IDs_ordered[:k])
 		top_k_query = set(query_doc_IDs_ordered[:k])
 		precision = len(top_k_query.intersection(set(true_doc_IDs)))/k
+		# print("type_doc:", type(true_doc_IDs))
+		# print("true_doc:", true_doc_IDs)
 		return precision
 
 	def meanPrecision(self, doc_IDs_ordered, query_ids, qrels, k):
@@ -65,10 +69,11 @@ class Evaluation():
 		meanPrecision = -1
 		Precesion = 0
 		#Fill in code here
+		print("query_ids_______",query_ids)
 		for i in range(len(query_ids)):
 			query_id = query_ids[i]
 			doc_ID_ordered = doc_IDs_ordered[i]
-			true_doc_Ids = qrels[i]
+			# for each in qrels
 			Precesion += self.queryPrecision(doc_ID_ordered, query_id, true_doc_Ids, k)
 		meanPrecision = Precesion/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanPrecision

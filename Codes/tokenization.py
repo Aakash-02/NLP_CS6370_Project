@@ -56,7 +56,7 @@ class Tokenization():
 		tokenizedText = []
 		for sent in text:
 			tokenizedText.append(tokenizer.tokenize(sent))
-            if '.' in tokenizedText[-1]:
-                tokenizedText[-1].remove(".")
+			if '.' in tokenizedText[-1]:
+				tokenizedText[-1].remove(".")
 
 		return tokenizedText
