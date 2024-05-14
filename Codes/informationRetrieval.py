@@ -2,9 +2,6 @@ from util import *
 
 # Add your import statements here
 import numpy as np
-import pandas as pd
-
-
 
 class InformationRetrieval():
 
