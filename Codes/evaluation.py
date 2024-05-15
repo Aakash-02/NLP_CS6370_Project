@@ -7,7 +7,7 @@ import math
 
 class Evaluation():
 
-	def queryPrecision(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
+	def queryPrecision(self, query_doc_IDs_ordered, query_id, true_doc_IDs: list, k):
 		"""
 		Computation of precision of the Information Retrieval System
 		at a given value of k for a single query
@@ -33,12 +33,9 @@ class Evaluation():
 		precision = -1
 
 		#Fill in code here
-		# print("query_id: ", query_id)
-		# print("query: ",query_doc_IDs_ordered[:k])
-		top_k_query = set(query_doc_IDs_ordered[:k])
-		precision = len(top_k_query.intersection(set(true_doc_IDs)))/k
-		# print("type_doc:", type(true_doc_IDs))
-		# print("true_doc:", true_doc_IDs)
+		top_k = query_doc_IDs_ordered[:k]
+		intersection = [value for value in top_k if value in true_doc_IDs]
+		precision = len(intersection) / k
 		return precision
 
 	def meanPrecision(self, doc_IDs_ordered, query_ids, qrels, k):
@@ -69,12 +66,20 @@ class Evaluation():
 		meanPrecision = -1
 		Precesion = 0
 		#Fill in code here
-		print("query_ids_______",query_ids)
+		query_true_doc_ids = []
+		true_doc_ids = []
+		for i in range(len(qrels) - 1):
+			if qrels[i]['query_num'] != qrels[i+1]['query_num']:
+				true_doc_ids.append(int(qrels[i]['id']))
+				query_true_doc_ids.append(true_doc_ids)
+				true_doc_ids = []
+			else:
+				true_doc_ids.append(int(qrels[i]['id']))
+		true_doc_ids.append(qrels[i+1]['id'])
+		query_true_doc_ids.append(true_doc_ids)
+
 		for i in range(len(query_ids)):
-			query_id = query_ids[i]
-			doc_ID_ordered = doc_IDs_ordered[i]
-			# for each in qrels
-			Precesion += self.queryPrecision(doc_ID_ordered, query_id, true_doc_Ids, k)
+			Precesion += self.queryPrecision(doc_IDs_ordered[i], query_ids[i], query_true_doc_ids[i], k)
 		meanPrecision = Precesion/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanPrecision
 
@@ -105,8 +110,9 @@ class Evaluation():
 		recall = -1
 
 		#Fill in code here
-		top_k_query = set(query_doc_IDs_ordered[:k])
-		recall = len(top_k_query.intersection(set(true_doc_IDs)))/len(true_doc_IDs)
+		top_k = query_doc_IDs_ordered[:k]
+		intersection = [value for value in top_k if value in true_doc_IDs]
+		recall = len(intersection) / len(true_doc_IDs)
 		return recall
 
 
@@ -140,11 +146,23 @@ class Evaluation():
 		#Fill in code here
 		Recall = 0
 		#Fill in code here
+		query_true_doc_ids = []
+		true_doc_ids = []
+
+		# construction of the query and their relevant documents list
+		for i in range(len(qrels) - 1):
+			if qrels[i]['query_num'] != qrels[i+1]['query_num']:
+				true_doc_ids.append(qrels[i]['id'])
+				query_true_doc_ids.append(true_doc_ids)
+				true_doc_ids = []
+			else:
+				true_doc_ids.append(qrels[i]['id'])
+		true_doc_ids.append(qrels[i+1]['id'])
+		query_true_doc_ids.append(true_doc_ids)
+
+		# iterating through the queries for further calculation
 		for i in range(len(query_ids)):
-			query_id = query_ids[i]
-			doc_ID_ordered = doc_IDs_ordered[i]
-			true_doc_Ids = qrels[i]
-			Recall += self.queryPrecision(doc_ID_ordered, query_id, true_doc_Ids, k)
+			Recall += self.queryRecall(doc_IDs_ordered[i], query_ids[i], query_true_doc_ids[i], k)
 		meanRecall = Recall/len(query_ids) if len(query_ids) > 0 else 0.0
 
 		return meanRecall
@@ -210,11 +228,22 @@ class Evaluation():
 		meanFscore = -1
 		Fscore = 0
 		#Fill in code here
+		query_true_doc_ids = []
+		true_doc_ids = []
+
+		for i in range(len(qrels) - 1):
+			if qrels[i]['query_num'] != qrels[i+1]['query_num']:
+				true_doc_ids.append(qrels[i]['id'])
+				query_true_doc_ids.append(true_doc_ids)
+				true_doc_ids = []
+			else:
+				true_doc_ids.append(qrels[i]['id'])
+		# adding the last element and adding to the true doc ids of queries
+		true_doc_ids.append(qrels[i+1]['id'])
+		query_true_doc_ids.append(true_doc_ids)
+
 		for i in range(len(query_ids)):
-			query_doc_id = doc_IDs_ordered[i]
-			true_doc_id = qrels[i]
-			query_id = query_ids[i]
-			Fscore += self.queryFscore(query_doc_id, query_id, true_doc_id, k)
+			Fscore += self.queryFscore(doc_IDs_ordered[i], query_ids[i], query_true_doc_ids[i], k)
 		meanFscore = Fscore/len(query_ids) if len(query_ids) > 0 else 0.0
 		return meanFscore
 	
@@ -289,14 +318,24 @@ class Evaluation():
 		meanNDCG = -1
 		NDGC = 0.0
 		#Fill in code here
-		for i in range(len(query_ids)):
-			doc_id_ordered = doc_IDs_ordered[i]
-			query_id = query_ids[i]
-			true_doc_id = qrels[i]
-			NDGC += self.queryNDCG(doc_id_ordered, query_id, true_doc_id, k)
-		meanNDCG = NDGC/len(query_ids) if len(query_ids) > 0 else 0.0
-		return meanNDCG
+		query_true_doc_ids = []
+		true_doc_ids = []
 
+		for i in range(len(qrels) - 1):
+			if qrels[i]['query_num'] != qrels[i+1]['query_num']:
+				true_doc_ids.append(qrels[i]['id'])
+				query_true_doc_ids.append(true_doc_ids)
+				true_doc_ids = []
+			else:
+				true_doc_ids.append(qrels[i]['id'])
+		# adding the last element and adding to the true doc ids of queries
+		true_doc_ids.append(qrels[i+1]['id'])
+		query_true_doc_ids.append(true_doc_ids)
+
+		for i in range(len(query_ids)):
+			NDGC += self.queryNDCG(doc_IDs_ordered[i], query_ids[i], query_true_doc_ids[i], k)
+		meanNDCG = NDGC / len(query_ids) if len(query_ids) > 0 else 0.0
+		return meanNDCG
 
 	def queryAveragePrecision(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
 		"""

@@ -4,7 +4,7 @@ from util import *
 import numpy as np
 from tqdm import tqdm
 
-class InformationRetrieval():
+class EmmbeddingRetrieval():
     def __init__(self):
         self.index = None
         self.docs = None
@@ -50,11 +50,13 @@ class InformationRetrieval():
 
         self.index = index
         self.docs = docs
+        # for i in range(len(docIDs)):
+        #     self.docs[docIDs[i]] = docs[i]
+        # self.docs = {docIDs: doc for doc in docs}
         self.vocab = vocab
         self.doc_IDs = docIDs
         # print("index",index)
-        print(len(self.vocab))
-       
+    
     def rank(self, queries):
         """
         Rank the documents according to relevance for each query
@@ -75,7 +77,6 @@ class InformationRetrieval():
 
         doc_IDs_ordered = []
         docs = self.docs
-
         # unpacking the last two dimensions to have the list of docs and each having a sub list of all words in the doc
         doc_words = []
         for doc in docs:
@@ -83,17 +84,20 @@ class InformationRetrieval():
             for sent in doc:
                 doc_words[-1] += sent
         
+        # word embeddings:
+
+
         # tf calculation for the docs
         tf = np.zeros((len(self.vocab), len(docs)))
         for i in range(len(doc_words)):
             for j in range(len(self.vocab)):
                 tf[j, i] += doc_words[i].count(self.vocab[j])
-            
+
             tf[:, i] = tf[:,i] / len(doc_words[i]) if len(doc_words[i]) !=0 else 0.0
         print("=============doc_tf done=============")
 
         # idf calculation for the docs
-        idf = np.zeros((len(self.vocab), 1))
+        idf = np.ones((len(self.vocab), 1))
         for i in range(len(self.vocab)):
             for j in range(len(doc_words)):
                 if self.vocab[i] in doc_words[j]:
@@ -102,7 +106,7 @@ class InformationRetrieval():
 
         # tf-idf calculation
         print("=============idf done=============")
-        tf_idf = tf * np.log((len(doc_words)) / (idf + 1e-9))
+        tf_idf = tf * np.log((len(doc_words)+len(self.vocab)) / idf)
         
         print("=============doc_tfidf done=============")
         query_words = []
@@ -118,15 +122,17 @@ class InformationRetrieval():
                 tf_q[j, i] += query_words[i].count(self.vocab[j])
             tf_q[:, i] /= len(query_words[i])
 
-        print("=============query_tf done=============")
-        tf_idf_q =  tf_q * np.log((len(doc_words)) / (idf + 1e-9))
-        print("=============query_tfidf done=============")
+        print("=============query tf idf done=============")
+        tf_idf_q =  tf_q * np.log((len(doc_words)+len(self.vocab)) / idf)s
 
+        print("=============query_tfidf done=============")
         norm_d = np.linalg.norm(tf_idf, axis=0).reshape(-1,1)
         norm_q = np.linalg.norm(tf_idf_q, axis = 0).reshape(-1,1)
-        cos_sim = tf_idf_q.T@tf_idf/(norm_q@norm_d.T + 1e-7)
-        print("=============cosine done=============")
+        print(norm_d)
+        print(norm_q)
+        cos_sim = tf_idf_q.T@tf_idf/(norm_q@norm_d.T)
 
+        print("=============cosine done=============")
         ranks = []
         for i in tqdm(range(len(cos_sim))):
             rank = np.argsort(cos_sim[i,:], axis=0)
