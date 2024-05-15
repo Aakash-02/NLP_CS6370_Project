@@ -4,6 +4,9 @@ from inflectionReduction import InflectionReduction
 from stopwordRemoval import StopwordRemoval
 from informationRetrieval import InformationRetrieval, EmmbeddingRetrieval, LSA, TfIDFUmap
 from evaluation import Evaluation
+import time
+
+start_time = time.time()
 
 from sys import version_info
 import argparse
@@ -287,3 +290,6 @@ if __name__ == "__main__":
 		searchEngine.handleCustomQuery()
 	else:
 		searchEngine.evaluateDataset()
+	
+	time_elapsed = time.time() - start_time
+	print(f"Time Elapsed: {time_elapsed} secs")
