@@ -34,8 +34,12 @@ class Evaluation():
 
 		#Fill in code here
 		top_k = query_doc_IDs_ordered[:k]
-		intersection = [value for value in top_k if value in true_doc_IDs]
-		precision = len(intersection) / k
+		precision = 0
+	
+		for value in true_doc_IDs:
+			if int(value) in top_k:
+				precision += 1
+		precision /= k
 		return precision
 
 	def meanPrecision(self, doc_IDs_ordered, query_ids, qrels, k):
@@ -111,8 +115,11 @@ class Evaluation():
 
 		#Fill in code here
 		top_k = query_doc_IDs_ordered[:k]
-		intersection = [value for value in top_k if value in true_doc_IDs]
-		recall = len(intersection) / len(true_doc_IDs)
+		recall = 0
+		for value in true_doc_IDs:
+			if int(value) in top_k:
+				recall += 1
+		recall  /= len(true_doc_IDs)
 		return recall
 
 
@@ -271,23 +278,12 @@ class Evaluation():
 			The nDCG value as a number between 0 and 1
 		"""
 
-		nDCG = -1
-
-		#Fill in code here
-		DCG = 0.0
-		IDCG = 0.0
-		
-		for i in range(min(k, len(query_doc_IDs_ordered))):
-			doc_id = query_doc_IDs_ordered[i]
-			relevance = 1 if doc_id in true_doc_IDs else 0
-			DCG += (2**relevance - 1) / (math.log2(i + 2))
-		
-		for i in range(min(k, len(true_doc_IDs))):
-			IDCG += (2**1 - 1) / (math.log2(i + 2))
-		
-		nDCG = DCG / IDCG if IDCG > 0 else 0.0
-
+		relevances = [1 if doc_id in true_doc_IDs else 0 for doc_id in query_doc_IDs_ordered[:k]]
+		dcg = sum(rel / np.log2(idx + 2) for idx, rel in enumerate(relevances))
+		idcg = sum(1 / np.log2(idx + 2) for idx in range(min(len(true_doc_IDs), k)))
+		nDCG = dcg / idcg if idcg > 0 else 0
 		return nDCG
+
 
 
 	def meanNDCG(self, doc_IDs_ordered, query_ids, qrels, k):
@@ -315,27 +311,17 @@ class Evaluation():
 			The mean nDCG value as a number between 0 and 1
 		"""
 
-		meanNDCG = -1
-		NDGC = 0.0
-		#Fill in code here
-		query_true_doc_ids = []
-		true_doc_ids = []
-
-		for i in range(len(qrels) - 1):
-			if qrels[i]['query_num'] != qrels[i+1]['query_num']:
-				true_doc_ids.append(qrels[i]['id'])
-				query_true_doc_ids.append(true_doc_ids)
-				true_doc_ids = []
-			else:
-				true_doc_ids.append(qrels[i]['id'])
-		# adding the last element and adding to the true doc ids of queries
-		true_doc_ids.append(qrels[i+1]['id'])
-		query_true_doc_ids.append(true_doc_ids)
-
-		for i in range(len(query_ids)):
-			NDGC += self.queryNDCG(doc_IDs_ordered[i], query_ids[i], query_true_doc_ids[i], k)
-		meanNDCG = NDGC / len(query_ids) if len(query_ids) > 0 else 0.0
+		nDCGs = []
+		for idx, query_id in enumerate(query_ids):
+			true_doc_IDs = []
+			for doc in qrels:
+				# print(type(doc['query_num']))
+				if doc['query_num'] == str(query_id):
+					true_doc_IDs.append(int(doc['id']))
+			nDCGs.append(self.queryNDCG(doc_IDs_ordered[idx], query_id, true_doc_IDs, k))
+		meanNDCG = sum(nDCGs) / len(nDCGs) if nDCGs else 0
 		return meanNDCG
+
 
 	def queryAveragePrecision(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
 		"""
@@ -364,20 +350,14 @@ class Evaluation():
 		avgPrecision = -1
 
 		#Fill in code here
-		num_relevant_docs_retrieved = 0
-		total_precision = 0.0
+		# num_relevant_docs_retrieved = 0
+		# total_precision = 0.0
 
-		# Calculate precision at each retrieved document
-		for i in range(k):
-			if query_doc_IDs_ordered[i] in true_doc_IDs:
-				num_relevant_docs_retrieved += 1
-				precision_at_i = num_relevant_docs_retrieved / (i + 1)
-				total_precision += precision_at_i
-
-		# Calculate average precision
-		avgPrecision = total_precision / len(true_doc_IDs) if len(true_doc_IDs) > 0 else 0.0
-
+		relevant_indices = [i for i, doc_id in enumerate(query_doc_IDs_ordered[:k]) if doc_id in true_doc_IDs]
+		precisions = [self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i + 1) for i in relevant_indices]
+		avgPrecision = sum(precisions) / len(precisions) if precisions else 0
 		return avgPrecision
+
 
 
 	def meanAveragePrecision(self, doc_IDs_ordered, query_ids, q_rels, k):
@@ -405,15 +385,15 @@ class Evaluation():
 			The MAP value as a number between 0 and 1
 		"""
 
-		meanAveragePrecision = -1
-		AveragePrecesion = 0
-		#Fill in code here
-		for i in range(len(query_ids)):
-			doc_id_ordered = doc_IDs_ordered[i]
-			query_id = query_ids[i]
-			true_id = q_rels[i]
-			AveragePrecesion += self.queryAveragePrecision(doc_id_ordered, query_id, true_id, k)
-			
-		meanAveragePrecision = AveragePrecesion/len(query_ids) if len(query_ids) > 0 else 0.0
+		averagePrecisions = []
+		for idx, query_id in enumerate(query_ids):
+			true_doc_IDs = []
+			for doc in q_rels:
+				# print(type(doc['query_num']))
+				if doc['query_num'] == str(query_id):
+					true_doc_IDs.append(int(doc['id']))
+			averagePrecisions.append(self.queryAveragePrecision(doc_IDs_ordered[idx], query_id, true_doc_IDs, k))
+		meanAveragePrecision = sum(averagePrecisions) / len(averagePrecisions) if averagePrecisions else 0
+
 		return meanAveragePrecision
 

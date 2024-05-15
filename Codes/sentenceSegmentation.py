@@ -30,6 +30,8 @@ class SentenceSegmentation():
 			segmentedText = " ".join(text.split(delimiter))
         # splitting using the space
 		segmentedText = segmentedText.split()
+		if "" in segmentedText:
+			segmentedText.remove('')
 		return segmentedText
 
 	def punkt(self, text):

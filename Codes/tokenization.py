@@ -2,7 +2,7 @@ from util import *
 
 # Add your import statements here
 from nltk.tokenize import TreebankWordTokenizer
-
+import re
 
 
 class Tokenization():
@@ -27,6 +27,8 @@ class Tokenization():
 		#Fill in code here
 		tokenizedText = []
 		for sent in text:
+			sent = sent.lower()
+			sent = re.sub('[A-Za-z]+', " ", sent)
 			tokenizedText.append(sent.split())
 
 		return tokenizedText
@@ -55,6 +57,11 @@ class Tokenization():
 
 		tokenizedText = []
 		for sent in text:
+			sent = sent.lower()
+			sent = re.sub('[A-Za-z]', ' ', sent)
 			tokenizedText.append(tokenizer.tokenize(sent))
+			
+			if '' in tokenizedText[-1]:
+				tokenizedText[-1].remove("")
 
 		return tokenizedText

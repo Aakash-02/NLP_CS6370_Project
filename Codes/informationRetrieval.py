@@ -3,6 +3,8 @@ from util import *
 # Add your import statements here
 import numpy as np
 from tqdm import tqdm
+import gensim
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 class InformationRetrieval():
     def __init__(self):
@@ -52,8 +54,8 @@ class InformationRetrieval():
         self.docs = docs
         self.vocab = vocab
         self.doc_IDs = docIDs
-        # print("index",index)
-        print(len(self.vocab))
+        v = np.array(self.vocab)
+        np.save("vocab", v)
        
     def rank(self, queries):
         """
@@ -76,12 +78,24 @@ class InformationRetrieval():
         doc_IDs_ordered = []
         docs = self.docs
 
+        # model = gensim.models.Word2Vec(self.vocab, min_count = 1, vector_size= 128, window = 5)
+        # word_embed = np.zeros((len(self.vocab), 128))
+        # for word in self.vocab:
+        #     print(word)
+        #     word_embed[i] = model.wv[word]
+        # print(word_embed)
+
         # unpacking the last two dimensions to have the list of docs and each having a sub list of all words in the doc
         doc_words = []
         for doc in docs:
             doc_words.append([])
             for sent in doc:
                 doc_words[-1] += sent
+        
+        def dummy_func(docs):
+            return docs
+        vectorizer = TfidfVectorizer(analyzer= 'word', tokenizer=dummy_func, preprocessor=dummy_func, token_pattern=None)
+        tf_idf_sklearn = vectorizer.fit_transform(doc_words)
         
         # tf calculation for the docs
         tf = np.zeros((len(self.vocab), len(docs)))
@@ -118,9 +132,15 @@ class InformationRetrieval():
                 tf_q[j, i] += query_words[i].count(self.vocab[j])
             tf_q[:, i] /= len(query_words[i])
 
+        tf_idf_q_sklearn = vectorizer.transform(query_words)
+
         print("=============query_tf done=============")
         tf_idf_q =  tf_q * np.log((len(doc_words)) / (idf + 1e-9))
         print("=============query_tfidf done=============")
+
+        tf_idf = tf_idf_sklearn.todense().T
+        tf_idf_q = tf_idf_q_sklearn.todense().T
+        print(tf_idf.shape, tf_idf_q.shape)
 
         norm_d = np.linalg.norm(tf_idf, axis=0).reshape(-1,1)
         norm_q = np.linalg.norm(tf_idf_q, axis = 0).reshape(-1,1)
@@ -129,8 +149,8 @@ class InformationRetrieval():
 
         ranks = []
         for i in tqdm(range(len(cos_sim))):
-            rank = np.argsort(cos_sim[i,:], axis=0)
-            rank = [self.doc_IDs[j] for j in rank]
+            rank = np.argsort(cos_sim[i,:], axis=1)
+            rank = [self.doc_IDs[rank[0, j]] for j in range(rank.shape[1])]
             ranks.append(rank)
        
         doc_IDs_ordered = ranks
