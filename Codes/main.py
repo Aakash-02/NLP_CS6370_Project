@@ -2,7 +2,7 @@ from sentenceSegmentation import SentenceSegmentation
 from tokenization import Tokenization
 from inflectionReduction import InflectionReduction
 from stopwordRemoval import StopwordRemoval
-from informationRetrieval import InformationRetrieval
+from informationRetrieval import InformationRetrieval, EmmbeddingRetrieval, LSA, TfIDFUmap
 from evaluation import Evaluation
 
 from sys import version_info
@@ -33,6 +33,9 @@ class SearchEngine:
 		self.stopwordRemover = StopwordRemoval()
 
 		self.informationRetriever = InformationRetrieval()
+		self.embeddingRetriever = EmmbeddingRetrieval()
+		self.lsaRetriever = LSA(self.args.k)
+		self.umapRetriever = TfIDFUmap()
 		self.evaluator = Evaluation()
 
 
@@ -44,6 +47,7 @@ class SearchEngine:
 			return self.sentenceSegmenter.naive(text)
 		elif self.args.segmenter == "punkt":
 			return self.sentenceSegmenter.punkt(text)
+		
 
 	def tokenize(self, text):
 		"""
@@ -53,6 +57,8 @@ class SearchEngine:
 			return self.tokenizer.naive(text)
 		elif self.args.tokenizer == "ptb":
 			return self.tokenizer.pennTreeBank(text)
+		elif self.args.tokenizer == "preg":
+			return self.tokenizer.pennTreeBank_reg(text)
 
 	def reduceInflection(self, text):
 		"""
@@ -157,10 +163,21 @@ class SearchEngine:
 		# Process documents
 		processedDocs = self.preprocessDocs(docs)
 
+		# doc_IDs_ordered = None
 		# Build document index
-		self.informationRetriever.buildIndex(processedDocs, doc_ids)
-		# Rank the documents for each query
-		doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
+		if self.args.model == 'tf-idf':
+			self.informationRetriever.buildIndex(processedDocs, doc_ids)
+			# Rank the documents for each query
+			doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
+		elif self.args.model == 'WordEmbed':
+			self.embeddingRetriever.buildIndex(processedDocs, doc_ids)
+			doc_IDs_ordered = self.embeddingRetriever.rank(processedQueries)
+		elif self.args.model == "LSA":
+			self.lsaRetriever.buildIndex(processedDocs, doc_ids)
+			doc_IDs_ordered = self.lsaRetriever.rank(processedQueries)
+		elif self.args.model == "umap":
+			self.umapRetriever.buildIndex(processedDocs, doc_ids)
+			doc_IDs_ordered = self.umapRetriever.rank(processedQueries)
 
 		# Read relevance judements
 		qrels = json.load(open(args.dataset + "cran_qrels.json", 'r'))[:]
@@ -196,7 +213,7 @@ class SearchEngine:
 		plt.plot(range(1, 11), MAPs, label="MAP")
 		plt.plot(range(1, 11), nDCGs, label="nDCG")
 		plt.legend()
-		plt.title("Evaluation Metrics - Cranfield Dataset")
+		plt.title(f"Evaluation Metrics - Cranfield Dataset on {self.args.model} model")
 		plt.xlabel("k")
 		plt.savefig(args.out_folder + "eval_plot.png")
 
@@ -220,9 +237,16 @@ class SearchEngine:
 		processedDocs = self.preprocessDocs(docs)
 
 		# Build document index
-		self.informationRetriever.buildIndex(processedDocs, doc_ids)
-		# Rank the documents for the query
-		doc_IDs_ordered = self.informationRetriever.rank([processedQuery])[0]
+		if self.args.model == 'tf-idf':
+			self.informationRetriever.buildIndex(processedDocs, doc_ids)
+			# Rank the documents for each query
+			doc_IDs_ordered = self.informationRetriever.rank(processedQuery)[0]
+		elif self.args.model == 'WordEmbed':
+			self.embeddingRetriever.buildIndex(processedDocs, doc_ids)
+			doc_IDs_ordered = self.embeddingRetriever.rank(processedQuery)[0]
+		elif self.args.model == "LSA":
+			self.lsaRetriever.buildIndex(processedDocs)
+			doc_IDs_ordered = self.lsaRetriever.rank(processedQuery)[0]
 
 		# Print the IDs of first five documents
 		print("\nTop five document IDs : ")
@@ -244,10 +268,14 @@ if __name__ == "__main__":
 	parser.add_argument('-segmenter', default = "punkt",
 	                    help = "Sentence Segmenter Type [naive|punkt]")
 	parser.add_argument('-tokenizer',  default = "ptb",
-	                    help = "Tokenizer Type [naive|ptb]")
+	                    help = "Tokenizer Type [naive|ptb|ptbwithreg]")
 	parser.add_argument('-custom', action = "store_true", 
 						help = "Take custom query as input")
+	parser.add_argument("-model", default='tf-idf',
+					 help= "Model type: [tf-idf|LSA|WordEmbed|umap]")
+	parser.add_argument("-k", default= 2, help = "K value for LSA")
 	
+	# parser.add_argument("-reg", default="No", help="Regularisation toggle")
 	# Parse the input arguments
 	args = parser.parse_args()
 

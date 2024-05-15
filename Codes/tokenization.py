@@ -28,7 +28,7 @@ class Tokenization():
 		tokenizedText = []
 		for sent in text:
 			sent = sent.lower()
-			sent = re.sub('[A-Za-z]+', " ", sent)
+			sent = re.sub('^[A-Za-z]+', " ", sent)
 			tokenizedText.append(sent.split())
 
 		return tokenizedText
@@ -58,9 +58,40 @@ class Tokenization():
 		tokenizedText = []
 		for sent in text:
 			sent = sent.lower()
-			sent = re.sub('[A-Za-z]', ' ', sent)
+			# sent = re.sub('[^A-Za-z0-9]+', ' ', sent)
 			tokenizedText.append(tokenizer.tokenize(sent))
-			
+
+			# if '' in tokenizedText[-1]:
+			# 	tokenizedText[-1].remove("")
+
+		return tokenizedText
+	
+	def pennTreeBank_reg(self, text):
+		"""
+		Tokenization using the Penn Tree Bank Tokenizer
+
+		Parameters
+		----------
+		arg1 : list
+			A list of strings where each string is a single sentence
+
+		Returns
+		-------
+		list
+			A list of lists where each sub-list is a sequence of tokens
+		"""
+
+		tokenizedText = None
+
+		#Fill in code here
+		tokenizer = TreebankWordTokenizer()
+
+		tokenizedText = []
+		for sent in text:
+			sent = sent.lower()
+			sent = re.sub('[^A-Za-z]+', ' ', sent)
+			tokenizedText.append(tokenizer.tokenize(sent))
+
 			if '' in tokenizedText[-1]:
 				tokenizedText[-1].remove("")
 
